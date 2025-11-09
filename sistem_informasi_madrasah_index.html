@@ -1,0 +1,311 @@
+<!--
+Sistem Informasi Madrasah - Single-file demo
+Save this as `index.html` and buka di browser. Cocok untuk prototype/GitHub Pages.
+Fitur yang sudah termasuk:
+- Beranda (profil singkat)
+- Daftar Guru & Siswa (mock data di JavaScript)
+- Berita & Pengumuman
+- Jadwal Pelajaran
+- Pencarian sederhana + filter
+- Form kontak (front-end only)
+- Panel admin sederhana (mock login: user: admin / pass: admin123)
+
+Cara pakai:
+1. Simpan file ini sebagai index.html
+2. Buka di browser atau upload ke GitHub Pages (repository dengan branch `gh-pages` atau `/docs`)
+3. Untuk menyimpan data sementara, buka console DevTools dan gunakan localStorage (demo disediakan)
+
+Catatan:
+- Ini masih frontend-only. Untuk produksi, hubungkan ke backend (API + database) dan autentikasi aman.
+- Jika mau, saya bisa buatkan versi yang memisahkan file CSS/JS, atau integrasi backend (PHP/Node.js).
+-->
+
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sistem Informasi Madrasah - Demo</title>
+  <meta name="description" content="Sistem Informasi Madrasah - profil, guru, siswa, berita, pengumuman, jadwal" />
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+  <style>
+    /* ====== Reset & base ====== */
+    :root{--accent:#0b5ed7;--muted:#6b7280;--card:#ffffff;--bg:#f3f4f6}
+    *{box-sizing:border-box}
+    body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; margin:0;background:var(--bg);color:#111}
+    a{color:var(--accent);text-decoration:none}
+    img{max-width:100%;height:auto}
+    .container{max-width:1100px;margin:0 auto;padding:20px}
+
+    /* ====== Header ====== */
+    header{background:linear-gradient(90deg,#fff 0%, #f8fafc 100%);box-shadow:0 1px 4px rgba(2,6,23,0.06);position:sticky;top:0;z-index:40}
+    .nav{display:flex;gap:20px;align-items:center;justify-content:space-between;padding:12px 20px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .brand .logo{width:46px;height:46px;border-radius:8px;background:var(--accent);display:grid;place-items:center;color:#fff;font-weight:700}
+    nav a{margin-right:12px;font-weight:600;color:#0f172a}
+    .cta{padding:8px 12px;border-radius:8px;background:var(--accent);color:#fff;border:none;cursor:pointer}
+
+    /* ====== Grid ====== */
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:20px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+
+    /* ====== Cards ====== */
+    .card{background:var(--card);border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(2,6,23,0.06)}
+    h1,h2,h3{margin:0 0 12px}
+    p{margin:0 0 12px;color:var(--muted)}
+
+    /* ====== Lists ====== */
+    .list{display:flex;flex-direction:column;gap:10px}
+    .item{display:flex;gap:12px;align-items:center;padding:10px;border-radius:8px;border:1px solid rgba(15,23,42,0.04)}
+    .avatar{width:52px;height:52px;border-radius:8px;background:#eef2ff;display:grid;place-items:center;font-weight:700;color:var(--accent)}
+    .meta{flex:1}
+    .muted{color:var(--muted);font-size:13px}
+
+    /* ====== Search ====== */
+    .search{display:flex;gap:8px}
+    .search input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(15,23,42,0.06)}
+    .btn{padding:8px 10px;border-radius:8px;border:1px solid rgba(15,23,42,0.06);background:#fff;cursor:pointer}
+
+    /* ====== Footer ====== */
+    footer{padding:18px;text-align:center;color:var(--muted);font-size:13px}
+
+    /* ====== Modal ====== */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.45);z-index:80}
+    .modal.open{display:flex}
+    .modal .inner{width:640px;max-width:96%;background:#fff;border-radius:12px;padding:18px}
+
+    /* ====== small helpers ====== */
+    .row{display:flex;gap:12px;align-items:center}
+    .tag{padding:6px 8px;border-radius:999px;border:1px solid rgba(15,23,42,0.06);font-size:13px}
+    .muted-sm{font-size:12px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <div class="brand">
+        <div class="logo">M</div>
+        <div>
+          <div style="font-weight:800">SIM Madrasah</div>
+          <div class="muted-sm">Prototype Sistem Informasi Madrasah</div>
+        </div>
+      </div>
+      <nav>
+        <a href="#beranda">Beranda</a>
+        <a href="#guru">Guru</a>
+        <a href="#siswa">Siswa</a>
+        <a href="#berita">Berita</a>
+        <a href="#jadwal">Jadwal</a>
+        <button class="cta" onclick="openAdmin()">Masuk Admin</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container" style="padding-top:20px;">
+    <section id="beranda" class="card">
+      <h1>Selamat datang di Sistem Informasi Madrasah</h1>
+      <p>Ini adalah demo frontend sederhana untuk manajemen profil madrasah, data guru, data siswa, berita, pengumuman, dan jadwal pelajaran. Untuk kebutuhan produksi, hubungkan ke backend dan database.</p>
+      <div class="row">
+        <div class="tag">Status: Demo</div>
+        <div class="tag">Versi: 1.0</div>
+      </div>
+    </section>
+
+    <div class="grid" style="margin-top:18px">
+      <div>
+        <section id="guru" class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <h2>Daftar Guru</h2>
+            <div style="width:320px;display:flex;gap:8px;">
+              <div class="search" style="width:100%">
+                <input id="searchGuru" placeholder="Cari guru..." oninput="renderGuru()" />
+                <button class="btn" onclick="resetGuru()">Reset</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="listGuru" class="list" style="margin-top:12px"></div>
+        </section>
+
+        <section id="siswa" class="card" style="margin-top:14px">
+          <h2>Daftar Siswa</h2>
+          <div style="display:flex;gap:8px;margin-bottom:10px">
+            <input id="searchSiswa" placeholder="Cari siswa (nama/NISN)..." oninput="renderSiswa()" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(15,23,42,0.04)" />
+            <button class="btn" onclick="resetSiswa()">Reset</button>
+          </div>
+          <div id="listSiswa" class="list"></div>
+        </section>
+
+        <section id="berita" class="card" style="margin-top:14px">
+          <h2>Berita & Pengumuman</h2>
+          <div id="listBerita" class="list"></div>
+        </section>
+
+        <section id="jadwal" class="card" style="margin-top:14px">
+          <h2>Jadwal Pelajaran</h2>
+          <div id="jadwalList"></div>
+        </section>
+      </div>
+
+      <aside>
+        <div class="card">
+          <h3>Profil Madrasah</h3>
+          <p><strong>Nama:</strong> MTsN Contoh</p>
+          <p><strong>Alamat:</strong> Jl. Pendidikan No. 1, Contoh Kota</p>
+          <p><strong>Telepon:</strong> (021) 123-456</p>
+          <hr style="margin:12px 0" />
+          <h3>Kontak</h3>
+          <form onsubmit="event.preventDefault(); sendContact();">
+            <input id="namaKontak" placeholder="Nama" required style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(15,23,42,0.04);margin-bottom:8px" />
+            <input id="emailKontak" placeholder="Email" type="email" required style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(15,23,42,0.04);margin-bottom:8px" />
+            <textarea id="pesanKontak" placeholder="Pesan" required style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(15,23,42,0.04);margin-bottom:8px"></textarea>
+            <button class="cta" type="submit">Kirim</button>
+          </form>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h3>Ringkasan</h3>
+          <div class="muted-sm">Guru terdaftar: <span id="countGuru">0</span></div>
+          <div class="muted-sm">Siswa terdaftar: <span id="countSiswa">0</span></div>
+          <div class="muted-sm">Berita aktif: <span id="countBerita">0</span></div>
+        </div>
+      </aside>
+    </div>
+
+    <div id="modal" class="modal" onclick="closeModal(event)">
+      <div class="inner" role="dialog" aria-modal="true" onclick="event.stopPropagation()">
+        <div id="modalContent"></div>
+        <div style="text-align:right;margin-top:10px">
+          <button class="btn" onclick="closeModal()">Tutup</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="adminPanel" class="modal">
+      <div class="inner">
+        <h3>Login Admin</h3>
+        <form onsubmit="event.preventDefault(); doLogin();">
+          <input id="loginUser" placeholder="Username" required style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(15,23,42,0.04);margin-bottom:8px" />
+          <input id="loginPass" placeholder="Password" type="password" required style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(15,23,42,0.04);margin-bottom:8px" />
+          <div style="text-align:right"><button class="cta" type="submit">Masuk</button></div>
+        </form>
+        <div style="margin-top:8px;color:var(--muted);font-size:13px">Demo login: <strong>admin / admin123</strong></div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <div class="container">© " + new Date().getFullYear() + " SIM Madrasah • Demo</div>
+  </footer>
+
+  <script>
+    // ====== Mock data ======
+    const data = {
+      guru: [
+        {id:1,nama:'Ahmad Zulkarnain',mapel:'Matematika',nip:'19790101 200501 1 001',email:'ahmad@example.com'},
+        {id:2,nama:'Siti Nurhaliza',mapel:'Bahasa Indonesia',nip:'19800202 200701 1 002',email:'siti@example.com'},
+        {id:3,nama:'Budi Santoso',mapel:'Pendidikan Agama Islam',nip:'19780505 200401 1 003',email:'budi@example.com'}
+      ],
+      siswa: [
+        {id:1,nisn:'1234567890',nama:'Andi',kelas:'VIII A'},
+        {id:2,nisn:'1234567891',nama:'Rina',kelas:'VII B'},
+        {id:3,nisn:'1234567892',nama:'Joko',kelas:'VIII C'}
+      ],
+      berita: [
+        {id:1,judul:'Penerimaan Siswa Baru Dibuka',tanggal:'2025-06-12',isi:'Pendaftaran untuk tahun ajaran baru dibuka mulai 1 Juni 2025.'},
+        {id:2,judul:'Kegiatan Pesantren Kilat',tanggal:'2025-04-20',isi:'Pesantren kilat akan dilaksanakan pada bulan Ramadhan.'}
+      ],
+      jadwal: [
+        {hari:'Senin',mapel:'Matematika',waktu:'07:00 - 08:30',kelas:'VIII A'},
+        {hari:'Senin',mapel:'Bahasa Indonesia',waktu:'08:30 - 10:00',kelas:'VII B'},
+        {hari:'Selasa',mapel:'PAI',waktu:'07:00 - 08:30',kelas:'VIII C'}
+      ]
+    };
+
+    // ====== Initial render ======
+    function renderAll(){ renderGuru(); renderSiswa(); renderBerita(); renderJadwal(); updateCounts(); }
+
+    function updateCounts(){ document.getElementById('countGuru').textContent = data.guru.length; document.getElementById('countSiswa').textContent = data.siswa.length; document.getElementById('countBerita').textContent = data.berita.length; }
+
+    // ====== Guru ======
+    function renderGuru(){
+      const q = document.getElementById('searchGuru').value.trim().toLowerCase();
+      const list = document.getElementById('listGuru'); list.innerHTML='';
+      const arr = data.guru.filter(g => g.nama.toLowerCase().includes(q) || g.mapel.toLowerCase().includes(q));
+      if(arr.length===0){ list.innerHTML='<div class="muted-sm">Tidak ada guru.</div>'; return; }
+      arr.forEach(g=>{
+        const el = document.createElement('div'); el.className='item';
+        el.innerHTML = `<div class="avatar">${g.nama.split(' ').map(s=>s[0]).slice(0,2).join('')}</div>
+          <div class="meta"><div style="font-weight:700">${g.nama}</div><div class="muted-sm">${g.mapel} • ${g.nip}</div></div>
+          <div><button class="btn" onclick='showDetail("guru",${g.id})'>Detail</button></div>`;
+        list.appendChild(el);
+      })
+    }
+    function resetGuru(){ document.getElementById('searchGuru').value=''; renderGuru(); }
+
+    // ====== Siswa ======
+    function renderSiswa(){
+      const q = document.getElementById('searchSiswa').value.trim().toLowerCase();
+      const list = document.getElementById('listSiswa'); list.innerHTML='';
+      const arr = data.siswa.filter(s => s.nama.toLowerCase().includes(q) || s.nisn.includes(q) || s.kelas.toLowerCase().includes(q));
+      if(arr.length===0){ list.innerHTML='<div class="muted-sm">Tidak ada siswa.</div>'; return; }
+      arr.forEach(s=>{
+        const el = document.createElement('div'); el.className='item';
+        el.innerHTML = `<div class="avatar">${s.nama.split(' ').map(x=>x[0]).slice(0,2).join('')}</div>
+          <div class="meta"><div style="font-weight:700">${s.nama}</div><div class="muted-sm">NISN: ${s.nisn} • ${s.kelas}</div></div>
+          <div><button class="btn" onclick='showDetail("siswa",${s.id})'>Detail</button></div>`;
+        list.appendChild(el);
+      })
+    }
+    function resetSiswa(){ document.getElementById('searchSiswa').value=''; renderSiswa(); }
+
+    // ====== Berita ======
+    function renderBerita(){ const list = document.getElementById('listBerita'); list.innerHTML=''; data.berita.forEach(b=>{
+      const el = document.createElement('div'); el.className='item';
+      el.innerHTML = `<div style="flex:1"><div style="font-weight:700">${b.judul}</div><div class="muted-sm">${b.tanggal}</div></div><div><button class="btn" onclick='showDetail("berita",${b.id})'>Baca</button></div>`;
+      list.appendChild(el);
+    }) }
+
+    // ====== Jadwal ======
+    function renderJadwal(){ const el = document.getElementById('jadwalList'); el.innerHTML='';
+      const days = groupBy(data.jadwal, x=>x.hari);
+      for(const hari in days){
+        const card = document.createElement('div'); card.className='card'; card.style.marginBottom='8px';
+        card.innerHTML = `<strong>${hari}</strong><div style="margin-top:6px">${days[hari].map(j=>`<div class=\"muted-sm\">${j.waktu} • ${j.mapel} • ${j.kelas}</div>`).join('')}</div>`;
+        el.appendChild(card);
+      }
+    }
+    function groupBy(arr,fn){ return arr.reduce((acc,x)=>{ const k=fn(x); (acc[k]||(acc[k]=[])).push(x); return acc },{}); }
+
+    // ====== Modal detail ======
+    function showDetail(type,id){
+      let html = '';
+      if(type==='guru'){ const g = data.guru.find(x=>x.id===id); html = `<h3>${g.nama}</h3><p class=\"muted-sm\">Mata Pelajaran: ${g.mapel}</p><p class=\"muted-sm\">NIP: ${g.nip}</p><p class=\"muted-sm\">Email: ${g.email}</p>` }
+      if(type==='siswa'){ const s = data.siswa.find(x=>x.id===id); html = `<h3>${s.nama}</h3><p class=\"muted-sm\">NISN: ${s.nisn}</p><p class=\"muted-sm\">Kelas: ${s.kelas}</p>` }
+      if(type==='berita'){ const b = data.berita.find(x=>x.id===id); html = `<h3>${b.judul}</h3><p class=\"muted-sm\">${b.tanggal}</p><p>${b.isi}</p>` }
+      document.getElementById('modalContent').innerHTML = html;
+      document.getElementById('modal').classList.add('open');
+    }
+    function closeModal(e){ if(!e||e.target===document.getElementById('modal')) document.getElementById('modal').classList.remove('open'); }
+
+    // ====== Contact form ======
+    function sendContact(){ const nama=document.getElementById('namaKontak').value; const email=document.getElementById('emailKontak').value; const pesan=document.getElementById('pesanKontak').value; alert('Terima kasih, pesan Anda telah dikirim (demo).\nNama: '+nama+'\nEmail: '+email); document.getElementById('namaKontak').value=''; document.getElementById('emailKontak').value=''; document.getElementById('pesanKontak').value=''; }
+
+    // ====== Admin demo ======
+    function openAdmin(){ document.getElementById('adminPanel').classList.add('open'); }
+    function doLogin(){ const u=document.getElementById('loginUser').value; const p=document.getElementById('loginPass').value; if(u==='admin'&&p==='admin123'){ alert('Login berhasil (demo). Anda sekarang admin.'); document.getElementById('adminPanel').classList.remove('open'); showAdminDashboard(); } else { alert('Login gagal. Gunakan demo admin/admin123') } }
+    function showAdminDashboard(){ const content = `<h3>Panel Admin (Demo)</h3><p class=\"muted-sm\">Di sini admin bisa menambah/mengubah data. Di versi ini, buka console dan gunakan fungsi addDemo() untuk menambah contoh data.</p><div style=\"text-align:right\"><button class=\"btn\" onclick=\"document.getElementById('adminPanel').classList.add('open')\">Tutup</button></div>`; document.getElementById('modalContent').innerHTML = content; document.getElementById('modal').classList.add('open'); }
+
+    // ====== Utility demo functions ======
+    function addDemo(){ // contoh menambah data via console
+      data.guru.push({id:Date.now(),nama:'Guru Baru',mapel:'Olahraga',nip:'0000',email:'baru@example.com'}); renderGuru(); updateCounts(); console.log('Guru ditambahkan'); }
+
+    // ====== Startup ======
+    renderAll();
+
+    // Expose some functions for quick demo testing di console
+    window.data=data; window.addDemo=addDemo; window.renderAll=renderAll; window.showDetail=showDetail; window.openAdmin=openAdmin;
+  </script>
+</body>
+</html>
